@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -16,6 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    // securityFilterChain : 스프링 시큐리티에서 적용된 보얀규칙들을 필터로 구현해 둔 것
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -39,17 +43,25 @@ public class SecurityConfig {
                 .httpBasic(); // HTTP Basic 인증 사용
         return  http.build();
     }
+
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
+    public PasswordEncoder passwordEncoder() {      // 비밀번호 암호화에 사용할 인코더
+        return  new BCryptPasswordEncoder();
+    }
+
+
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        UserDetails user = User.builder()
                 .username("user")
-                .password("password")
+                .password(passwordEncoder.encode("password"))
                 .roles("USER")
                 .build();
-        UserDetails admin = User.withDefaultPasswordEncoder()
+        UserDetails admin = User.builder()
                 .username("admin")
-                .password("password")
-                .roles("ADMIN","USER")
+                .password(passwordEncoder.encode("password"))
+                //.roles("ADMIN","USER")  // ADMIN과 USER 권한 가짐
+                .roles("ADMIN")     // ADMIN 권한 가짐
                 .build();
         return new InMemoryUserDetailsManager(user, admin);
     }
