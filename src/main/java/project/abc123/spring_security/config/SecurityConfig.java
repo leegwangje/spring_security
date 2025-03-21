@@ -13,8 +13,6 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import javax.servlet.http.HttpServletResponse;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -30,17 +28,16 @@ public class SecurityConfig {
                 . antMatchers("/admin/**").hasRole("ADMIN") // ADMIN 권한 사용자만 접근 가능
                 . antMatchers("/logout").authenticated() // 인증 받은 사용자만 접근 가능
                 . antMatchers("/**").permitAll() // 인증/인가 여부와 상관없이 접근 가능
-                .and()
+            .and()
+                .formLogin()  // form login인증 사용
+            .and()
                 .logout() // 로그아웃 설정
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // 로그아웃 URL 설정
-                .logoutSuccessHandler((req,res,auth) -> {
-                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 로그아웃을 위해 401 응답
-                })
+                .logoutSuccessUrl("/") // 로그아웃 성공 후 리다이렉트될 URL
                 .invalidateHttpSession(true) // 세션 무효화
                 .deleteCookies("JSESSIONID") // JSESSIONID 쿠기 삭제
-                .permitAll()
-                .and()
-                .httpBasic(); // HTTP Basic 인증 사용
+                .permitAll();
+
         return  http.build();
     }
 
